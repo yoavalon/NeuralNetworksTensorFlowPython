@@ -9,6 +9,7 @@ from skimage import color as col
 import tensorflow as tf
 import cv2
 import matplotlib.pyplot as plt 
+import random
 
 
 def Log(content) : 
@@ -49,7 +50,7 @@ images28 = np.array(images28)
 # Convert `images28` to grayscale
 images28 = col.rgb2gray(images28)
 
-Log("BUild Neural Network")
+Log("Build Neural Network")
 
 # Initialize placeholders 
 x = tf.placeholder(dtype = tf.float32, shape = [None, 28, 28])
@@ -73,10 +74,49 @@ correct_pred = tf.argmax(logits, 1)
 # Define an accuracy metric
 accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
-print("images_flat: ", images_flat)
-print("logits: ", logits)
-print("loss: ", loss)
-print("predicted_labels: ", correct_pred)
+Log("Run Neural Network")
+
+tf.set_random_seed(1234)
+sess = tf.Session()
+
+sess.run(tf.global_variables_initializer())
+
+for i in range(201):
+        print('EPOCH', i)
+        _, accuracy_val = sess.run([train_op, accuracy], feed_dict={x: images28, y: labels})
+        if i % 10 == 0:
+            print("Loss: ", loss)
+        print('DONE WITH EPOCH')
+
+Log("Evaluate Neural Network")
+
+# Pick 10 random images
+sample_indexes = random.sample(range(len(images28)), 10)
+sample_images = [images28[i] for i in sample_indexes]
+sample_labels = [labels[i] for i in sample_indexes]
+
+# Run the "correct_pred" operation
+predicted = sess.run([correct_pred], feed_dict={x: sample_images})[0]
+                        
+# Print the real and predicted labels
+print(sample_labels)
+print(predicted)
+
+# Display the predictions and the ground truth visually.
+fig = plt.figure(figsize=(10, 10))
+for i in range(len(sample_images)):
+    truth = sample_labels[i]
+    prediction = predicted[i]
+    plt.subplot(5, 2,1+i)
+    plt.axis('off')
+    color='green' if truth == prediction else 'red'
+    plt.text(40, 10, "Truth:        {0}\nPrediction: {1}".format(truth, prediction), 
+             fontsize=12, color=color)
+    plt.imshow(sample_images[i],  cmap="gray")
+
+plt.show()
+
+sess.close()
 
 Log("end")
 
@@ -86,6 +126,13 @@ Log("end")
 
 
 # old code for test output
+
+'''
+print("images_flat: ", images_flat)
+print("logits: ", logits)
+print("loss: ", loss)
+print("predicted_labels: ", correct_pred)
+'''
 
 '''
 # Print the `images` dimensions
